@@ -57,6 +57,13 @@ test('buildSiteData reads only allowlisted documents and produces unique IDs', (
   assert.doesNotMatch(serialized, /Java后端项目经验梳理/);
 });
 
+test('buildSiteData is deterministic for unchanged Markdown', () => {
+  const first = buildSiteData(config, process.cwd());
+  const second = buildSiteData(config, process.cwd());
+
+  assert.deepEqual(second, first);
+});
+
 test('writeSite emits one self-contained and safe HTML page', async () => {
   const outputDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'interview-site-'));
   const outputFile = path.join(outputDirectory, 'index.html');

@@ -159,7 +159,6 @@ export function buildSiteData(siteConfig, rootDir) {
 
   return {
     title: siteConfig.title,
-    generatedAt: new Date().toISOString(),
     documents,
     points
   };
