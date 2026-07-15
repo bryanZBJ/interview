@@ -6,7 +6,8 @@ test.beforeEach(async ({ page }) => {
 
 test('renders the responsive learning dashboard without horizontal overflow', async ({ page }) => {
   await expect(page.getByRole('heading', { name: '学习驾驶舱' })).toBeVisible();
-  await expect(page.getByText('732', { exact: true })).toBeVisible();
+  const totalPoints = await page.locator('#site-data').evaluate((element) => JSON.parse(element.textContent).points.length);
+  await expect(page.locator('.metric').filter({ hasText: '知识点' }).locator('strong')).toHaveText(String(totalPoints));
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(overflow).toBe(false);
