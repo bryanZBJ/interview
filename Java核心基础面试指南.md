@@ -1644,7 +1644,89 @@ System.out.println(str4 == str5); // false
 
 ---
 
-### 8.2. String 常量池（String Table）与内存优化
+### 8.2. 为什么 String 要设计成不可变？
+
+#### 1. 什么叫 String 不可变？
+
+`String` 不可变是指：一个 `String` 对象创建完成后，它表示的字符内容不能再被修改。所谓字符串拼接、替换和截取，实际上都会返回一个新的 `String` 对象，原对象保持不变。
+
+```java
+String value = "Java";
+value.concat(" Agent");
+
+System.out.println(value); // Java
+```
+
+`concat()` 没有修改原来的 `value`，只有接收返回值才会得到新字符串：
+
+```java
+value = value.concat(" Agent");
+```
+
+#### 2. String 如何保证不可变？
+
+主要依靠以下设计：
+
+1. `String` 类使用 `final` 修饰，不能被继承，避免子类破坏不可变语义。
+2. 底层字符存储数组不会直接暴露给外部。JDK 8 使用 `final char[]`，JDK 9 以后主要使用 `final byte[]`。
+3. `String` 不提供修改内部字符内容的公开方法；`substring()`、`replace()`、`concat()` 等操作都返回新对象。
+4. 构造和转换过程中会控制可变数据的访问，外部代码不能通过数组引用直接修改 String 内部内容。
+
+> `final` 数组引用只能保证引用不能重新指向其他数组，并不代表数组元素天然不能修改。String 真正不可变，还依赖类不能被继承、内部数组不对外暴露以及不提供修改入口。
+
+#### 3. 设计成不可变有什么好处？
+
+##### 好处一：天然线程安全
+
+String 创建后状态不会变化，多个线程可以直接共享同一个对象，不需要额外加锁，也不会发生一个线程修改后影响其他线程的问题。
+
+##### 好处二：可以安全使用字符串常量池
+
+相同字面量可以复用同一个 String 对象：
+
+```java
+String a = "hello";
+String b = "hello";
+
+System.out.println(a == b); // true
+```
+
+如果 String 可以被修改，修改 `a` 可能同时改变 `b` 看到的内容，字符串常量池就无法安全共享对象。
+
+##### 好处三：hashCode 稳定，适合作为 HashMap 的 key
+
+String 内容不变，因此它的 `hashCode` 也不会变化，可以缓存哈希计算结果，并安全地作为 `HashMap`、`HashSet` 的 key。
+
+可变对象作为 key 的风险如下：
+
+```java
+List<String> key = new ArrayList<>();
+key.add("A");
+
+Map<List<String>, String> map = new HashMap<>();
+map.put(key, "value");
+
+key.add("B"); // key 内容变化，hashCode 也发生变化
+System.out.println(map.get(key)); // 可能取不到原来的值
+```
+
+对象放入 HashMap 后，如果参与 `hashCode` 计算的内容发生变化，重新计算出的桶位置可能与写入时不同，导致查询异常。String 不可变可以避免这个问题。
+
+##### 好处四：提高安全性
+
+String 经常表示类名、文件路径、URL、数据库连接地址、用户名和权限参数。不可变可以避免参数校验通过后，又被其他代码修改，降低“校验后篡改”的风险。
+
+##### 好处五：便于共享、缓存和推理
+
+不可变对象状态稳定，可以放心地在方法之间传递、在多个模块中共享和放入缓存。调用方不需要担心其他代码偷偷修改对象，代码更容易理解和排查。
+
+#### 4. 面试口述版
+
+> String 不可变主要有五个好处：第一，状态不会变化，所以天然线程安全；第二，相同字符串可以在常量池中安全复用；第三，hashCode 稳定并且可以缓存，适合作为 HashMap 的 key；第四，可以防止路径、URL、类名等参数在校验后被篡改；第五，便于在不同线程和模块之间安全共享。它的不可变性主要由 final 类、内部数组不暴露以及所有修改操作返回新对象共同保证。
+
+---
+
+### 8.3. String 常量池（String Table）与内存优化
 
 #### 1. 经典面试题：`String s = new String("abc")` 创建了几个对象？
 * **答案**：创建了 **1 个或 2 个** 对象。
