@@ -31,6 +31,7 @@ export default {
     { topic: 'AI 第一周', slug: 'ai-week1-code-path', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/Java代码调用链.md' },
     { topic: 'AI 第一周', slug: 'ai-week1-troubleshooting', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/常见错误排查.md' },
     { topic: 'AI 第一周', slug: 'ai-week1-interview', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/面试问答与三分钟讲稿.md' },
+    { topic: 'AI 第一周', slug: 'ai-week1-experiment-summary', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/四组实验结论速查.md' },
     { topic: 'AI 第一周实验', slug: 'ai-week1-exp-token', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/experiments/01-token与上下文实验.md' },
     { topic: 'AI 第一周实验', slug: 'ai-week1-exp-sampling', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/experiments/02-采样参数实验.md' },
     { topic: 'AI 第一周实验', slug: 'ai-week1-exp-hallucination', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/experiments/03-幻觉对照实验.md' },
