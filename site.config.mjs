@@ -19,6 +19,21 @@ export default {
     { topic: '综合复习', slug: 'advanced-review', file: 'Java高级开发查缺补漏.md' },
     { topic: '综合复习', slug: 'interview-review', file: '面试题复盘.md' },
     { topic: 'AI 应用', slug: 'ai-app', file: 'AI应用开发面试指南.md' },
-    { topic: 'AI 应用', slug: 'ai-agent', file: 'AI Agent岗位面试准备计划.md' }
+    { topic: 'AI 应用', slug: 'ai-agent', file: 'AI Agent岗位面试准备计划.md' },
+    { topic: 'AI 第一周', slug: 'ai-week1', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/README.md' },
+    { topic: 'AI 第一周', slug: 'ai-week1-day1', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/Day1-LLM与Token.md' },
+    { topic: 'AI 第一周', slug: 'ai-week1-day2', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/Day2-上下文与采样参数.md' },
+    { topic: 'AI 第一周', slug: 'ai-week1-day3', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/Day3-幻觉与结构化输出.md' },
+    { topic: 'AI 第一周', slug: 'ai-week1-day4', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/Day4-DeepSeek-API.md' },
+    { topic: 'AI 第一周', slug: 'ai-week1-day5', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/Day5-SpringBoot普通聊天.md' },
+    { topic: 'AI 第一周', slug: 'ai-week1-day6', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/Day6-SSE流式聊天.md' },
+    { topic: 'AI 第一周', slug: 'ai-week1-day7', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/Day7-复盘与模拟面试.md' },
+    { topic: 'AI 第一周', slug: 'ai-week1-code-path', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/Java代码调用链.md' },
+    { topic: 'AI 第一周', slug: 'ai-week1-troubleshooting', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/常见错误排查.md' },
+    { topic: 'AI 第一周', slug: 'ai-week1-interview', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/docs/面试问答与三分钟讲稿.md' },
+    { topic: 'AI 第一周实验', slug: 'ai-week1-exp-token', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/experiments/01-token与上下文实验.md' },
+    { topic: 'AI 第一周实验', slug: 'ai-week1-exp-sampling', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/experiments/02-采样参数实验.md' },
+    { topic: 'AI 第一周实验', slug: 'ai-week1-exp-hallucination', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/experiments/03-幻觉对照实验.md' },
+    { topic: 'AI 第一周实验', slug: 'ai-week1-exp-json', file: '学习/AI Agent岗位面试准备/第一周-大模型基础/experiments/04-结构化输出实验.md' }
   ]
 };

@@ -266,6 +266,10 @@ Goal
 
 ### 第 1 周：补齐大模型基础
 
+详细执行安排：[[AI Agent面试准备第一周执行手册|AI Agent 面试准备第一周执行手册]]
+
+可直接运行的代码、实验和 Day 1-Day 7 讲义：[[学习/AI Agent岗位面试准备/第一周-大模型基础/README|第一周大模型基础学习包]]
+
 目标：
 
 1. 理解 LLM、token、上下文窗口、temperature、top-p、top-k、幻觉。

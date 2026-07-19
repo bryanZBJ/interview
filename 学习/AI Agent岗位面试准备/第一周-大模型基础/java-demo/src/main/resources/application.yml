@@ -1,0 +1,16 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+llm:
+  base-url: ${LLM_BASE_URL:https://api.deepseek.com}
+  api-key: ${DEEPSEEK_API_KEY:}
+  model: ${LLM_MODEL:deepseek-v4-flash}
+  mock-enabled: ${LLM_MOCK_ENABLED:true}
+  connect-timeout: ${LLM_CONNECT_TIMEOUT:3s}
+  response-timeout: ${LLM_RESPONSE_TIMEOUT:60s}
+  max-input-length: ${LLM_MAX_INPUT_LENGTH:4000}
+  default-max-tokens: ${LLM_DEFAULT_MAX_TOKENS:512}
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [requestId:%X{requestId:-}] %logger{36} - %msg%n"
