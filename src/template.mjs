@@ -16,6 +16,10 @@ function safeJson(value) {
     .replaceAll('\u2029', '\\u2029');
 }
 
+export function escapeInlineScript(source) {
+  return source.replace(/<\/script/gi, '<\\/script');
+}
+
 function readIcons(rootDir) {
   return Object.fromEntries(ICON_NAMES.map((name) => {
     const file = path.join(rootDir, 'node_modules', 'lucide-static', 'icons', `${name}.svg`);
@@ -29,10 +33,8 @@ function readIcons(rootDir) {
 
 export function renderPage(data, rootDir) {
   const css = fs.readFileSync(path.join(rootDir, 'src', 'site.css'), 'utf8');
-  const quizScript = fs.readFileSync(path.join(rootDir, 'src', 'quiz.js'), 'utf8')
-    .replaceAll('</script', '<\\/script');
-  const script = fs.readFileSync(path.join(rootDir, 'src', 'site.js'), 'utf8')
-    .replaceAll('</script', '<\\/script');
+  const quizScript = escapeInlineScript(fs.readFileSync(path.join(rootDir, 'src', 'quiz.js'), 'utf8'));
+  const script = escapeInlineScript(fs.readFileSync(path.join(rootDir, 'src', 'site.js'), 'utf8'));
   const payload = { ...data, icons: readIcons(rootDir) };
 
   return `<!doctype html>

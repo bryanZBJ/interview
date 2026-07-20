@@ -6,6 +6,14 @@ import test from 'node:test';
 
 import config from '../site.config.mjs';
 import { buildDocument, buildSiteData, writeSite } from '../src/build.mjs';
+import { escapeInlineScript } from '../src/template.mjs';
+
+test('escapeInlineScript safely escapes closing script tags regardless of case', () => {
+  assert.equal(
+    escapeInlineScript('</script></SCRIPT></ScRiPt>'),
+    '<\\/script><\\/script><\\/script>'
+  );
+});
 
 test('publication allowlist contains only unique interview Markdown documents', () => {
   assert.ok(config.documents.length >= 10);
@@ -88,13 +96,21 @@ test('generated page contains the accessible responsive learning shell', async (
     rootDir: process.cwd(),
     outputFile: path.join(outputDirectory, 'index.html')
   });
+  const quizScript = fs.readFileSync('src/quiz.js', 'utf8').replace(/<\/script/gi, '<\\/script');
+  const siteScript = fs.readFileSync('src/site.js', 'utf8').replace(/<\/script/gi, '<\\/script');
+  const quizButton = '<button type="button" data-route="quiz" aria-label="练习"></button>';
+  const quizButtons = html.match(/<button type="button" data-route="quiz" aria-label="练习"><\/button>/g) || [];
+  const primaryNav = html.match(/<nav class="primary-nav">([\s\S]*?)<\/nav>/)?.[1] || '';
+  const mobileNav = html.match(/<nav class="mobile-nav"[^>]*>([\s\S]*?)<\/nav>/)?.[1] || '';
 
   for (const label of ['首页', '知识库', '复习', '搜索', '浅色', '深色', '跟随系统']) {
     assert.match(html, new RegExp(label));
   }
-  assert.match(html, /InterviewQuiz/);
-  assert.match(html, /data-route="quiz"/);
-  assert.match(html, /aria-label="练习"/);
+  assert.ok(html.includes(quizScript));
+  assert.ok(html.indexOf(quizScript) < html.indexOf(siteScript));
+  assert.equal(quizButtons.length, 2);
+  assert.ok(primaryNav.includes(quizButton));
+  assert.ok(mobileNav.includes(quizButton));
   assert.match(html, /prefers-color-scheme/);
   assert.match(html, /prefers-reduced-motion/);
   assert.match(html, /safe-area-inset-bottom/);
