@@ -58,10 +58,12 @@ test('practises a random question before revealing its answer', async ({ page })
   await expect(page.getByRole('button', { name: '查看原文' })).toBeVisible();
   await expect(page.getByRole('button', { name: '下一题' })).toBeVisible();
 
-  await page.getByRole('button', { name: '需复习' }).click();
+  const reviewButton = page.getByRole('button', { name: '需复习' });
+  await reviewButton.click();
   await expect(question).toHaveText(firstQuestion);
   await expect(answer).toBeVisible();
-  await expect(page.getByRole('button', { name: '需复习' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(reviewButton).toHaveAttribute('aria-pressed', 'true');
+  await expect(reviewButton).toBeFocused();
 
   await page.getByRole('button', { name: '下一题' }).click();
   await expect(question).not.toHaveText(firstQuestion);
@@ -70,7 +72,11 @@ test('practises a random question before revealing its answer', async ({ page })
 });
 
 test('excludes quiz points whose source document is unavailable', async ({ page }) => {
-  const originalTotal = await page.locator('#site-data').evaluate((element) => JSON.parse(element.textContent).points.length);
+  const eligibleTotal = await page.locator('#site-data').evaluate((element) => {
+    const payload = JSON.parse(element.textContent);
+    const documentSlugs = new Set(payload.documents.map((document) => document.slug));
+    return globalThis.InterviewQuiz.createQuizQueue(payload.points.filter((point) => documentSlugs.has(point.documentSlug))).length;
+  });
   const fakeTitle = '不存在来源的边界测试题';
   await page.route('**/', async (route) => {
     const response = await route.fetch();
@@ -102,7 +108,7 @@ test('excludes quiz points whose source document is unavailable', async ({ page 
   await page.reload();
 
   await page.getByRole('button', { name: '练习' }).first().click();
-  await expect(page.locator('.section-header').filter({ hasText: '全部题库' })).toContainText(`${originalTotal} 个知识点`);
+  await expect(page.locator('.section-header').filter({ hasText: '全部题库' })).toContainText(`${eligibleTotal} 道可练习题`);
   await expect(page.locator('[data-quiz-question]')).not.toContainText(fakeTitle);
 });
 

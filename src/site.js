@@ -105,11 +105,17 @@
 
   function setPointStatus(pointId, status) {
     if (!STATUS.has(status) || !pointMap.has(pointId)) return;
+    const restoreQuizFocus = routeName() === 'quiz' && pointId === currentQuizId;
     if (status === 'unlearned') delete state.progress[pointId];
     else state.progress[pointId] = { status, updatedAt: Date.now() };
     saveState();
     showToast(`已标记为${STATUS_LABEL[status]}`);
     renderRoute();
+    if (restoreQuizFocus) {
+      requestAnimationFrame(() => {
+        document.querySelector(`[data-point-id="${CSS.escape(pointId)}"] [data-action="status"][data-status="${status}"]`)?.focus();
+      });
+    }
   }
 
   function parseRoute() {
@@ -363,7 +369,7 @@
     </section>` : `<button class="primary-button" type="button" data-action="quiz-reveal">${icon('book-open')}查看答案</button>`;
 
     main.innerHTML = `${heading('随机练习', '从全部题库随机抽题，先回答，再核对笔记。', 'QUIZ')}
-      <div class="section-header"><div><h2>全部题库</h2><p>${quizCandidates.length} 个知识点 · 本轮位置 ${roundPosition} / ${quizRoundTotal}</p></div></div>
+      <div class="section-header"><div><h2>全部题库</h2><p>${quizRoundTotal} 道可练习题 · 本轮位置 ${roundPosition} / ${quizRoundTotal}</p></div></div>
       <section data-quiz-question tabindex="-1">
         <p class="eyebrow">专题：${escapeHtml(point.topic)} · 来源文档：${escapeHtml(note.title)}</p>
         <h2>${escapeHtml(createQuestionTitle(point.title))}</h2>
