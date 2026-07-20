@@ -169,6 +169,11 @@ test('shows the correct primary navigation for the viewport', async ({ page }, t
     await expect(page.locator('.sidebar')).toBeVisible();
     await expect(page.locator('.mobile-nav')).toBeHidden();
   } else {
+    const hasTouchContext = await page.evaluate(() =>
+      navigator.maxTouchPoints > 0 && 'ontouchstart' in window
+    );
+    expect(hasTouchContext).toBe(true);
+
     const mobileNav = page.locator('.mobile-nav');
     await expect(mobileNav).toBeVisible();
     await expect(page.locator('.sidebar')).toBeHidden();
@@ -195,5 +200,35 @@ test('shows the correct primary navigation for the viewport', async ({ page }, t
       expect(button.withinNav).toBe(true);
       expect(button.height).toBeGreaterThanOrEqual(44);
     }
+  }
+
+  await page.getByRole('button', { name: '查看答案' }).click();
+  await expect(page.locator('[data-quiz-answer]')).toBeVisible();
+  const answerHasHorizontalOverflow = await page.evaluate(() =>
+    document.documentElement.scrollWidth > document.documentElement.clientWidth
+  );
+  expect(answerHasHorizontalOverflow).toBe(false);
+
+  if (!isDesktop) {
+    await page.evaluate(() => {
+      document.documentElement.style.scrollBehavior = 'auto';
+      window.scrollTo(0, document.documentElement.scrollHeight);
+    });
+    const safeAreaLayout = await page.evaluate(() => {
+      const main = document.getElementById('main-content');
+      const mobileNav = document.querySelector('.mobile-nav');
+      const actions = document.querySelector('[data-quiz-answer] > .reader-toolbar');
+      const navBounds = mobileNav.getBoundingClientRect();
+      const actionsBounds = actions.getBoundingClientRect();
+      return {
+        mainPaddingBottom: Number.parseFloat(getComputedStyle(main).paddingBottom),
+        navHeight: navBounds.height,
+        actionsBottom: actionsBounds.bottom,
+        navTop: navBounds.top
+      };
+    });
+
+    expect(safeAreaLayout.mainPaddingBottom).toBeGreaterThanOrEqual(safeAreaLayout.navHeight + 16);
+    expect(safeAreaLayout.actionsBottom).toBeLessThanOrEqual(safeAreaLayout.navTop);
   }
 });
