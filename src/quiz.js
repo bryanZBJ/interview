@@ -12,14 +12,17 @@
     '应用场景',
     '操作步骤',
     '实验步骤',
-    '前置准备'
+    '前置准备',
+    '固定prompt样例',
+    '可复制请求或调用方式'
   ]);
   const CHAPTER_NUMBER_PREFIX = /^(?:(?:第\s*)?(?:\d+(?:\.\d+)*|[一二三四五六七八九十百]+)(?:\s*[章节部分步])?|\((?:\d+(?:\.\d+)*|[一二三四五六七八九十百]+)\))\s*[.、:：)\]】\-—]*\s*/;
-  const TITLE_SPACING_AND_PUNCTUATION = /[\s:：。.!！?？、;；,，()（）【】\[\]{}《》<>“”"'‘’_\-—]/g;
+  const TITLE_SPACING_AND_PUNCTUATION = /[\s:：。.!！?？、;；,，()（）【】\[\]{}《》<>“”"'‘’_\/\-—]/g;
 
   function normalizeGenericStructuralTitle(title) {
     return String(title || '')
       .normalize('NFKC')
+      .toLowerCase()
       .trim()
       .replace(CHAPTER_NUMBER_PREFIX, '')
       .replace(TITLE_SPACING_AND_PUNCTUATION, '');
