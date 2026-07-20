@@ -71,6 +71,40 @@ test('practises a random question before revealing its answer', async ({ page })
   await expect(page.getByRole('button', { name: '查看答案' })).toBeVisible();
 });
 
+test('shares quiz progress with review and opens the current source heading', async ({ page }) => {
+  await page.goto('/#/quiz');
+  await page.getByRole('button', { name: '查看答案' }).click();
+
+  const firstQuizPointId = await page.locator('.reader-status').getAttribute('data-point-id');
+  expect(firstQuizPointId).toBeTruthy();
+
+  const reviewButton = page.getByRole('button', { name: '需复习' });
+  await reviewButton.click();
+  await expect(reviewButton).toHaveAttribute('aria-pressed', 'true');
+  const savedProgress = await page.evaluate(() => JSON.parse(localStorage.getItem('interview-learning-progress-v1')));
+  expect(savedProgress.progress[firstQuizPointId].status).toBe('review');
+
+  await page.locator('[data-route="review"]:visible').click();
+  await expect(page.locator(`.review-row[data-point="${firstQuizPointId}"]`)).toBeVisible();
+
+  await page.goto('/#/quiz');
+  await page.reload();
+  await page.getByRole('button', { name: '查看答案' }).click();
+  const currentQuizPointId = await page.locator('.reader-status').getAttribute('data-point-id');
+  expect(currentQuizPointId).toBeTruthy();
+  const sourcePoint = await page.locator('#site-data').evaluate((element, pointId) => {
+    const payload = JSON.parse(element.textContent);
+    return payload.points.find((point) => point.id === pointId);
+  }, currentQuizPointId);
+  expect(sourcePoint).toBeTruthy();
+
+  await page.getByRole('button', { name: '查看原文' }).click();
+  const expectedHash = `#/read/${encodeURIComponent(sourcePoint.documentSlug)}/${encodeURIComponent(sourcePoint.headingId)}`;
+  await expect(page).toHaveURL((url) => url.hash === expectedHash);
+  await expect(page.locator(`.reader-status[data-point-id="${currentQuizPointId}"]`)).toBeVisible();
+  await expect(page.locator('.article .point-highlight')).toHaveAttribute('id', sourcePoint.headingId);
+});
+
 test('excludes quiz points whose source document is unavailable', async ({ page }) => {
   const eligibleTotal = await page.locator('#site-data').evaluate((element) => {
     const payload = JSON.parse(element.textContent);
