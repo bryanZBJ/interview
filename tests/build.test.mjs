@@ -92,6 +92,9 @@ test('generated page contains the accessible responsive learning shell', async (
   for (const label of ['首页', '知识库', '复习', '搜索', '浅色', '深色', '跟随系统']) {
     assert.match(html, new RegExp(label));
   }
+  assert.match(html, /InterviewQuiz/);
+  assert.match(html, /data-route="quiz"/);
+  assert.match(html, /aria-label="练习"/);
   assert.match(html, /prefers-color-scheme/);
   assert.match(html, /prefers-reduced-motion/);
   assert.match(html, /safe-area-inset-bottom/);

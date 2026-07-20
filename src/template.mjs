@@ -3,7 +3,8 @@ import path from 'node:path';
 
 const ICON_NAMES = [
   'search', 'house', 'library', 'book-open', 'rotate-ccw', 'check',
-  'sun', 'moon', 'monitor', 'menu', 'chevron-right', 'arrow-left', 'list-filter'
+  'sun', 'moon', 'monitor', 'menu', 'chevron-right', 'arrow-left', 'list-filter',
+  'shuffle'
 ];
 
 function safeJson(value) {
@@ -28,6 +29,8 @@ function readIcons(rootDir) {
 
 export function renderPage(data, rootDir) {
   const css = fs.readFileSync(path.join(rootDir, 'src', 'site.css'), 'utf8');
+  const quizScript = fs.readFileSync(path.join(rootDir, 'src', 'quiz.js'), 'utf8')
+    .replaceAll('</script', '<\\/script');
   const script = fs.readFileSync(path.join(rootDir, 'src', 'site.js'), 'utf8')
     .replaceAll('</script', '<\\/script');
   const payload = { ...data, icons: readIcons(rootDir) };
@@ -55,6 +58,7 @@ export function renderPage(data, rootDir) {
       <nav class="primary-nav">
         <button type="button" data-route="home" aria-label="首页"></button>
         <button type="button" data-route="library" aria-label="知识库"></button>
+        <button type="button" data-route="quiz" aria-label="练习"></button>
         <button type="button" data-route="review" aria-label="复习"></button>
       </nav>
       <div class="sidebar-topics" id="sidebar-topics" aria-label="专题"></div>
@@ -82,6 +86,7 @@ export function renderPage(data, rootDir) {
   <nav class="mobile-nav" aria-label="移动端主导航">
     <button type="button" data-route="home" aria-label="首页"></button>
     <button type="button" data-route="library" aria-label="知识库"></button>
+    <button type="button" data-route="quiz" aria-label="练习"></button>
     <button type="button" data-route="review" aria-label="复习"></button>
   </nav>
 
@@ -99,6 +104,7 @@ export function renderPage(data, rootDir) {
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script type="application/json" id="site-data">${safeJson(payload)}</script>
+  <script>${quizScript}</script>
   <script>${script}</script>
 </body>
 </html>`;
