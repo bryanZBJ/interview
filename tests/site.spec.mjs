@@ -94,16 +94,22 @@ test('shares quiz progress with review and opens the current source heading', as
   expect(currentQuizPointId).toBeTruthy();
   const sourcePoint = await page.locator('#site-data').evaluate((element, pointId) => {
     const payload = JSON.parse(element.textContent);
-    return payload.points.find((point) => point.id === pointId);
+    const point = payload.points.find((item) => item.id === pointId);
+    if (!point) return null;
+    const sourceDocument = payload.documents.find((document) => document.slug === point.documentSlug);
+    const parsedDocument = new DOMParser().parseFromString(sourceDocument.html, 'text/html');
+    const renderedTitle = parsedDocument.getElementById(point.headingId)?.textContent.trim();
+    return { ...point, renderedTitle };
   }, currentQuizPointId);
   expect(sourcePoint).toBeTruthy();
+  expect(sourcePoint.renderedTitle).toBeTruthy();
 
   await page.getByRole('button', { name: '查看原文' }).click();
   const expectedHash = `#/read/${encodeURIComponent(sourcePoint.documentSlug)}/${encodeURIComponent(sourcePoint.headingId)}`;
   await expect(page).toHaveURL((url) => url.hash === expectedHash);
   await expect(page.locator(`.reader-status[data-point-id="${currentQuizPointId}"]`)).toBeVisible();
   await expect(page.locator('.article .point-highlight')).toHaveAttribute('id', sourcePoint.headingId);
-  await expect(page.locator('.article .point-highlight')).toHaveText(sourcePoint.title);
+  await expect(page.locator('.article .point-highlight')).toHaveText(sourcePoint.renderedTitle);
 });
 
 test('excludes quiz points whose source document is unavailable', async ({ page }) => {
