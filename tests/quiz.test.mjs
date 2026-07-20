@@ -22,6 +22,7 @@ const point = (title, overrides = {}) => ({
 test('quiz filter excludes structural headings and keeps interview concepts', () => {
   assert.equal(isQuizEligible(point('使用说明')), false);
   assert.equal(isQuizEligible(point('今日产出与完成打卡')), false);
+  assert.equal(isQuizEligible(point('参考')), false);
   assert.equal(isQuizEligible(point('什么是 Java 内存模型？')), true);
   assert.equal(isQuizEligible(point('ArrayList 和 LinkedList 的区别')), true);
   assert.equal(isQuizEligible(point('有效题目', { excerpt: '' })), false);
@@ -45,7 +46,7 @@ test('quiz queue contains each eligible point once', () => {
 
 test('new round avoids immediately repeating the previous question', () => {
   const points = [point('A'), point('B')];
-  const queue = createQuizQueue(points, { lastId: 'id-B', random: () => 0.99 });
+  const queue = createQuizQueue(points, { lastId: 'id-B', random: () => 0 });
 
   assert.notEqual(queue[0], 'id-B');
 });
