@@ -29,6 +29,8 @@ test('quiz filter excludes structural headings and keeps interview concepts', ()
 
 test('question title preserves questions and converts concept titles', () => {
   assert.equal(createQuestionTitle('Q1：什么是 Token？'), 'Q1：什么是 Token？');
+  assert.equal(createQuestionTitle('追问：Token 如何续期'), '追问：Token 如何续期');
+  assert.equal(createQuestionTitle('问题：Token 存在哪里'), '问题：Token 存在哪里');
   assert.equal(createQuestionTitle('什么是 BPMN？'), '什么是 BPMN？');
   assert.equal(createQuestionTitle('Java 内存模型'), '请解释：Java 内存模型');
 });
@@ -60,4 +62,18 @@ test('answer extraction stops before the next same-level heading', () => {
   }
 
   assert.equal(extractAnswerHtml('<h2 id="a">问题 A</h2><p>答案 A</p><h2>问题 B</h2>', 'a', FakeDOMParser), '<p>答案 A</p>');
+});
+
+test('answer extraction stops before a higher-level heading', () => {
+  class FakeDOMParser {
+    parseFromString() {
+      const after = { outerHTML: '<p>答案 A</p>', nextElementSibling: null, matches: () => false };
+      const higherHeading = { outerHTML: '<h2>下一章节</h2>', nextElementSibling: null, matches: (selector) => selector.includes('h2') };
+      after.nextElementSibling = higherHeading;
+      const heading = { tagName: 'H3', nextElementSibling: after };
+      return { getElementById: () => heading };
+    }
+  }
+
+  assert.equal(extractAnswerHtml('<h3 id="a">问题 A</h3><p>答案 A</p><h2>下一章节</h2>', 'a', FakeDOMParser), '<p>答案 A</p>');
 });
