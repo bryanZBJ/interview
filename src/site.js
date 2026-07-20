@@ -14,6 +14,7 @@
   const searchInput = document.getElementById('search-input');
   const searchResults = document.getElementById('search-results');
   const toast = document.getElementById('toast');
+  const { createQuestionTitle, createQuizQueue, extractAnswerHtml } = globalThis.InterviewQuiz;
   const documentMap = new Map(data.documents.map((document) => [document.slug, document]));
   const pointMap = new Map(data.points.map((point) => [point.id, point]));
   const topics = [...new Set(data.documents.map((document) => document.topic))];
@@ -21,6 +22,10 @@
   let toastTimer;
   let searchTimer;
   let state = loadState();
+  let quizQueue = [];
+  let currentQuizId = null;
+  let answerRevealed = false;
+  let quizRoundTotal = 0;
 
   function icon(name) {
     return data.icons[name] || '';
@@ -294,6 +299,78 @@
     document.getElementById('topbar-title').textContent = '复习';
   }
 
+  function takeNextQuizPoint(lastId = currentQuizId) {
+    const currentPoint = pointMap.get(currentQuizId);
+    if (currentPoint && documentMap.has(currentPoint.documentSlug)) return currentPoint;
+
+    if (!quizQueue.length) {
+      quizQueue = createQuizQueue(data.points, { lastId });
+      quizRoundTotal = quizQueue.length;
+    }
+
+    while (quizQueue.length) {
+      const point = pointMap.get(quizQueue.shift());
+      if (point && documentMap.has(point.documentSlug)) {
+        currentQuizId = point.id;
+        return point;
+      }
+    }
+
+    currentQuizId = null;
+    return null;
+  }
+
+  function quizAnswerHtml(point, note) {
+    try {
+      return extractAnswerHtml(note.html, point.headingId) || `<p>${escapeHtml(point.excerpt)}</p>`;
+    } catch (_error) {
+      return `<p>${escapeHtml(point.excerpt)}</p>`;
+    }
+  }
+
+  function focusQuiz(selector) {
+    requestAnimationFrame(() => {
+      const target = document.querySelector(selector);
+      if (!target) return;
+      target.scrollIntoView({ block: 'start' });
+      target.focus({ preventScroll: true });
+    });
+  }
+
+  function renderQuiz() {
+    const point = takeNextQuizPoint();
+    if (!point) {
+      main.innerHTML = `${heading('随机练习', '从全部题库随机抽题，先回答，再核对笔记。', 'QUIZ')}
+        <div class="empty-state"><strong>暂无可练习题目</strong>题目来源文档不存在或题库中没有合格知识点。</div>
+        <button class="text-button" type="button" data-route="library">返回知识库</button>`;
+      document.getElementById('topbar-title').textContent = '随机练习';
+      return;
+    }
+
+    const note = documentMap.get(point.documentSlug);
+    const roundPosition = Math.max(1, quizRoundTotal - quizQueue.length);
+    const answer = answerRevealed ? `<section data-quiz-answer tabindex="-1" aria-live="polite">
+      ${renderStatusControl(point)}
+      <article class="article">
+        <h2>参考答案</h2>
+        ${quizAnswerHtml(point, note)}
+      </article>
+      <div class="reader-toolbar">
+        <button class="text-button" type="button" data-action="quiz-original">${icon('book-open')}查看原文</button>
+        <button class="primary-button" type="button" data-action="quiz-next">${icon('shuffle')}下一题</button>
+      </div>
+    </section>` : `<button class="primary-button" type="button" data-action="quiz-reveal">${icon('book-open')}查看答案</button>`;
+
+    main.innerHTML = `${heading('随机练习', '从全部题库随机抽题，先回答，再核对笔记。', 'QUIZ')}
+      <div class="section-header"><div><h2>全部题库</h2><p>${data.points.length} 个知识点 · 本轮位置 ${roundPosition} / ${quizRoundTotal}</p></div></div>
+      <section data-quiz-question tabindex="-1">
+        <p class="eyebrow">专题：${escapeHtml(point.topic)} · 来源文档：${escapeHtml(note.title)}</p>
+        <h2>${escapeHtml(createQuestionTitle(point.title))}</h2>
+      </section>
+      ${answer}`;
+    document.getElementById('topbar-title').textContent = '随机练习';
+  }
+
   function renderRoute() {
     const route = parseRoute();
     const view = route.parts[0] || 'home';
@@ -305,6 +382,7 @@
 
     if (view === 'library') renderLibrary(route.query);
     else if (view === 'read') renderReader(route.parts);
+    else if (view === 'quiz') renderQuiz();
     else if (view === 'review') renderReview(route.query);
     else renderHome();
   }
@@ -359,6 +437,7 @@
     const navContent = {
       home: `${icon('house')}<span>首页</span>`,
       library: `${icon('library')}<span>知识库</span>`,
+      quiz: `${icon('shuffle')}<span>练习</span>`,
       review: `${icon('rotate-ccw')}<span>复习</span>`
     };
     document.querySelectorAll('[data-route]').forEach((button) => {
@@ -399,6 +478,23 @@
     if (action.dataset.action === 'status') {
       const container = action.closest('[data-point-id]');
       if (container) setPointStatus(container.dataset.pointId, action.dataset.status);
+    }
+    if (action.dataset.action === 'quiz-reveal') {
+      answerRevealed = true;
+      renderQuiz();
+      focusQuiz('[data-quiz-answer]');
+    }
+    if (action.dataset.action === 'quiz-next') {
+      const lastId = currentQuizId;
+      currentQuizId = null;
+      answerRevealed = false;
+      takeNextQuizPoint(lastId);
+      renderQuiz();
+      focusQuiz('[data-quiz-question]');
+    }
+    if (action.dataset.action === 'quiz-original') {
+      const point = pointMap.get(currentQuizId);
+      if (point) navigate(pointRoute(point));
     }
   });
 
