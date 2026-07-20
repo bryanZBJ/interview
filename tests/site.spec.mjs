@@ -52,6 +52,7 @@ test('practises a random question before revealing its answer', async ({ page })
   await page.getByRole('button', { name: '查看答案' }).click();
   const answer = page.locator('[data-quiz-answer]');
   await expect(answer).toBeVisible();
+  await expect(answer).toBeFocused();
   await expect(answer.getByRole('heading', { name: '参考答案' })).toBeVisible();
   await expect(answer.locator('.article')).not.toBeEmpty();
   await expect(page.getByRole('group', { name: '学习状态' })).toBeVisible();
@@ -155,11 +156,44 @@ test('excludes quiz points whose source document is unavailable', async ({ page 
 
 test('shows the correct primary navigation for the viewport', async ({ page }, testInfo) => {
   const isDesktop = testInfo.project.name.startsWith('desktop');
+  await page.locator('[data-route="quiz"]:visible').click();
+  await expect(page.locator('.workspace')).toBeVisible();
+  await expect(page.locator('[data-quiz-question]')).toBeVisible();
+
+  const hasHorizontalOverflow = await page.evaluate(() =>
+    document.documentElement.scrollWidth > document.documentElement.clientWidth
+  );
+  expect(hasHorizontalOverflow).toBe(false);
+
   if (isDesktop) {
     await expect(page.locator('.sidebar')).toBeVisible();
     await expect(page.locator('.mobile-nav')).toBeHidden();
   } else {
-    await expect(page.locator('.mobile-nav')).toBeVisible();
+    const mobileNav = page.locator('.mobile-nav');
+    await expect(mobileNav).toBeVisible();
     await expect(page.locator('.sidebar')).toBeHidden();
+
+    const navLayout = await mobileNav.evaluate((nav) => {
+      const navBounds = nav.getBoundingClientRect();
+      const buttons = [...nav.querySelectorAll('button')].map((button) => {
+        const bounds = button.getBoundingClientRect();
+        return {
+          height: bounds.height,
+          withinNav: bounds.left >= navBounds.left && bounds.right <= navBounds.right
+            && bounds.top >= navBounds.top && bounds.bottom <= navBounds.bottom
+        };
+      });
+      return {
+        gridTemplateColumns: getComputedStyle(nav).gridTemplateColumns,
+        buttons
+      };
+    });
+
+    expect(navLayout.gridTemplateColumns.trim().split(/\s+/)).toHaveLength(4);
+    expect(navLayout.buttons).toHaveLength(4);
+    for (const button of navLayout.buttons) {
+      expect(button.withinNav).toBe(true);
+      expect(button.height).toBeGreaterThanOrEqual(44);
+    }
   }
 });
