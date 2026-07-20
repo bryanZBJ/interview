@@ -356,10 +356,10 @@
 
     const note = documentMap.get(point.documentSlug);
     const roundPosition = Math.max(1, quizRoundTotal - quizQueue.length);
-    const answer = answerRevealed ? `<section data-quiz-answer tabindex="-1" aria-live="polite">
+    const answer = answerRevealed ? `<section data-quiz-answer aria-live="polite">
       ${renderStatusControl(point)}
       <article class="article">
-        <h2>参考答案</h2>
+        <h2 data-quiz-answer-title tabindex="-1">参考答案</h2>
         ${quizAnswerHtml(point, note)}
       </article>
       <div class="reader-toolbar">
@@ -489,7 +489,7 @@
     if (action.dataset.action === 'quiz-reveal') {
       answerRevealed = true;
       renderQuiz();
-      focusQuiz('[data-quiz-answer]');
+      focusQuiz('[data-quiz-answer-title]');
     }
     if (action.dataset.action === 'quiz-next') {
       const lastId = currentQuizId;

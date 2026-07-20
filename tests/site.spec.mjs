@@ -51,9 +51,18 @@ test('practises a random question before revealing its answer', async ({ page })
 
   await page.getByRole('button', { name: '查看答案' }).click();
   const answer = page.locator('[data-quiz-answer]');
+  const answerTitle = answer.getByRole('heading', { name: '参考答案' });
   await expect(answer).toBeVisible();
-  await expect(answer).toBeFocused();
-  await expect(answer.getByRole('heading', { name: '参考答案' })).toBeVisible();
+  await expect(answer).toHaveAttribute('aria-live', 'polite');
+  await expect(answer).not.toHaveAttribute('tabindex');
+  await expect(answerTitle).toBeVisible();
+  await expect(answerTitle).toBeFocused();
+  const answerTitleIsUnobscured = await answerTitle.evaluate((title) => {
+    const bounds = title.getBoundingClientRect();
+    const foreground = document.elementFromPoint(bounds.left + 8, bounds.top + (bounds.height / 2));
+    return foreground === title || title.contains(foreground);
+  });
+  expect(answerTitleIsUnobscured).toBe(true);
   await expect(answer.locator('.article')).not.toBeEmpty();
   await expect(page.getByRole('group', { name: '学习状态' })).toBeVisible();
   await expect(page.getByRole('button', { name: '查看原文' })).toBeVisible();
@@ -68,6 +77,7 @@ test('practises a random question before revealing its answer', async ({ page })
 
   await page.getByRole('button', { name: '下一题' }).click();
   await expect(question).not.toHaveText(firstQuestion);
+  await expect(question).toBeFocused();
   await expect(page.locator('[data-quiz-answer]')).toHaveCount(0);
   await expect(page.getByRole('button', { name: '查看答案' })).toBeVisible();
 });

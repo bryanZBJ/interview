@@ -166,7 +166,8 @@ a { color: var(--primary); text-underline-offset: 3px; }
 [data-quiz-answer] .article pre, [data-quiz-answer] .table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
 [data-quiz-answer] > .reader-toolbar { flex-wrap: wrap; margin: 12px 0 0; }
 [data-quiz-answer] > .reader-toolbar button { min-width: 0; min-height: 44px; }
-[data-quiz-question]:focus, [data-quiz-answer]:focus { outline: 3px solid color-mix(in srgb, var(--primary) 45%, transparent); outline-offset: 5px; }
+[data-quiz-question]:focus { outline: 3px solid color-mix(in srgb, var(--primary) 45%, transparent); outline-offset: 5px; }
+[data-quiz-answer-title]:focus { scroll-margin-top: 84px; outline: 2px solid color-mix(in srgb, var(--primary) 65%, transparent); outline-offset: 4px; }
 
 .mobile-nav { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; height: calc(72px + env(safe-area-inset-bottom)); padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; border-top: 1px solid var(--line); background: var(--surface); }
 .mobile-nav button, .primary-nav button { min-height: 48px; border: 0; border-radius: 6px; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--muted); }
