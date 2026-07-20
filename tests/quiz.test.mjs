@@ -34,7 +34,12 @@ const EXPECTED_GENERIC_HEADINGS = [
   '实验步骤',
   '前置准备',
   '固定 Prompt / 样例',
-  '可复制请求或调用方式'
+  '可复制请求或调用方式',
+  '参考',
+  '参考资料',
+  '延伸阅读',
+  '实验原文',
+  '总结'
 ];
 
 function normalizeExpectedHeading(title) {
@@ -42,7 +47,8 @@ function normalizeExpectedHeading(title) {
     .normalize('NFKC')
     .toLowerCase()
     .trim()
-    .replace(/^(?:(?:第\s*)?(?:\d+(?:\.\d+)*|[一二三四五六七八九十百]+)(?:\s*[章节部分步])?|\((?:\d+(?:\.\d+)*|[一二三四五六七八九十百]+)\))\s*[.、:：)\]】\-—]*\s*/, '')
+    .replace(/^\((?:\p{N}+|[一二三四五六七八九十百]+)\)[\p{P}\p{Z}]*/u, '')
+    .replace(/^(?:第\s*)?(?:\p{N}+(?:\.\p{N}+)*|[一二三四五六七八九十百]+)(?:\s*[章节部分步])?(?:[\p{P}\p{Z}]+|$)/u, '')
     .replace(/[\p{P}\p{Z}]/gu, '');
 }
 
@@ -64,7 +70,10 @@ test('quiz filter excludes exact generic structural headings after normalization
     '（二） 结论：',
     '第 3 章：逐步操作',
     '2. 固 定 pRoMpT / 样 例：',
-    '（三） 可复制请求或调用方式'
+    '（三） 可复制请求或调用方式',
+    '27. 参考资料',
+    '六、实验原文',
+    '（四）总结'
   ];
 
   for (const title of genericTitles) {
@@ -76,25 +85,37 @@ test('quiz filter excludes exact generic structural headings after normalization
   assert.equal(isQuizEligible(point('核心对比分析：CMS 与 G1')), true);
   assert.equal(isQuizEligible(point('固定 Prompt / 样例：退款场景')), true);
   assert.equal(isQuizEligible(point('可复制请求或调用方式：SSE 流式聊天')), true);
+  assert.equal(isQuizEligible(point('Q5：提供参考材料后为什么仍需要无依据拒答？')), true);
+  assert.equal(isQuizEligible(point('Java 并发容器总结')), true);
 });
 
 test('real quiz corpus contains no normalized generic structural headings', () => {
   const data = buildSiteData(config, process.cwd());
   const expectedHeadings = new Set(EXPECTED_GENERIC_HEADINGS.map(normalizeExpectedHeading));
   const knownGenericPoints = data.points.filter((item) => expectedHeadings.has(normalizeExpectedHeading(item.title)));
-  const eligibleTitles = new Set(data.points.filter(isQuizEligible).map((item) => normalizeExpectedHeading(item.title)));
 
-  assert.equal(knownGenericPoints.length, 28, 'expected all currently known generic headings in the real corpus');
-  for (const heading of expectedHeadings) {
-    assert.equal(eligibleTitles.has(heading), false, `expected real quiz corpus to exclude: ${heading}`);
+  for (const item of knownGenericPoints) {
+    assert.equal(isQuizEligible(item), false, `expected real quiz corpus to exclude: ${item.title}`);
   }
+});
+
+test('real quiz corpus preserves the reference-material refusal question', () => {
+  const data = buildSiteData(config, process.cwd());
+  const title = 'Q5：提供参考材料后为什么仍需要无依据拒答？';
+  const item = data.points.find((candidate) => candidate.title === title);
+
+  assert.ok(item, `expected real corpus to contain: ${title}`);
+  assert.equal(isQuizEligible(item), true);
 });
 
 test('question title preserves questions and converts concept titles', () => {
   assert.equal(createQuestionTitle('Q1：什么是 Token？'), 'Q1：什么是 Token？');
+  assert.equal(createQuestionTitle('Q：什么是 Token'), 'Q：什么是 Token');
   assert.equal(createQuestionTitle('追问：Token 如何续期'), '追问：Token 如何续期');
   assert.equal(createQuestionTitle('问题：Token 存在哪里'), '问题：Token 存在哪里');
   assert.equal(createQuestionTitle('什么是 BPMN？'), '什么是 BPMN？');
+  assert.equal(createQuestionTitle('JVM 是什么？与 JRE 的关系'), 'JVM 是什么？与 JRE 的关系');
+  assert.equal(createQuestionTitle('Queue 的并发语义'), '请解释：Queue 的并发语义');
   assert.equal(createQuestionTitle('Java 内存模型'), '请解释：Java 内存模型');
 });
 

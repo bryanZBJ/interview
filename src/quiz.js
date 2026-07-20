@@ -1,7 +1,7 @@
 ((root) => {
   'use strict';
 
-  const STRUCTURAL_TITLE_FRAGMENT = /使用说明|阅读说明|学习目标|必须理解|核心结论|生产建议|面试口述|今日产出|完成打卡|参考|参考资料|延伸阅读|实验原文|跟着做|阅读项目代码|修改实验|记录表|预期观察|快速验收|不看答案自测|自测|总结/;
+  const STRUCTURAL_TITLE_FRAGMENT = /使用说明|阅读说明|学习目标|必须理解|核心结论|生产建议|面试口述|今日产出|完成打卡|跟着做|阅读项目代码|修改实验|记录表|预期观察|快速验收|不看答案自测|自测/;
   const GENERIC_STRUCTURAL_TITLE = new Set([
     '目标',
     '准备',
@@ -14,7 +14,12 @@
     '实验步骤',
     '前置准备',
     '固定prompt样例',
-    '可复制请求或调用方式'
+    '可复制请求或调用方式',
+    '参考',
+    '参考资料',
+    '延伸阅读',
+    '实验原文',
+    '总结'
   ]);
   const CHAPTER_NUMBER_PREFIX = /^(?:(?:第\s*)?(?:\d+(?:\.\d+)*|[一二三四五六七八九十百]+)(?:\s*[章节部分步])?|\((?:\d+(?:\.\d+)*|[一二三四五六七八九十百]+)\))\s*[.、:：)\]】\-—]*\s*/;
   const TITLE_SPACING_AND_PUNCTUATION = /[\s:：。.!！?？、;；,，()（）【】\[\]{}《》<>“”"'‘’_\/\-—]/g;
@@ -42,7 +47,8 @@
 
   function createQuestionTitle(title) {
     const value = String(title || '').trim();
-    return /[?？]$/.test(value) || /^(?:Q\d*|追问|问题)/i.test(value) ? value : `请解释：${value}`;
+    const hasQuestionPrefix = /^(?:Q(?:\d+(?=\s|[:：、.?？]|$)|(?=\s*[:：、.?？]))|追问|问题)/i.test(value);
+    return /[?？]/.test(value) || hasQuestionPrefix ? value : `请解释：${value}`;
   }
 
   function createQuizQueue(points, { lastId = null, random = Math.random } = {}) {
