@@ -103,6 +103,7 @@ test('shares quiz progress with review and opens the current source heading', as
   await expect(page).toHaveURL((url) => url.hash === expectedHash);
   await expect(page.locator(`.reader-status[data-point-id="${currentQuizPointId}"]`)).toBeVisible();
   await expect(page.locator('.article .point-highlight')).toHaveAttribute('id', sourcePoint.headingId);
+  await expect(page.locator('.article .point-highlight')).toHaveText(sourcePoint.title);
 });
 
 test('excludes quiz points whose source document is unavailable', async ({ page }) => {
