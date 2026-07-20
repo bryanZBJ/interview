@@ -17,6 +17,7 @@
   const { createQuestionTitle, createQuizQueue, extractAnswerHtml } = globalThis.InterviewQuiz;
   const documentMap = new Map(data.documents.map((document) => [document.slug, document]));
   const pointMap = new Map(data.points.map((point) => [point.id, point]));
+  const quizCandidates = data.points.filter((point) => documentMap.has(point.documentSlug));
   const topics = [...new Set(data.documents.map((document) => document.topic))];
   let storageEnabled = true;
   let toastTimer;
@@ -304,7 +305,7 @@
     if (currentPoint && documentMap.has(currentPoint.documentSlug)) return currentPoint;
 
     if (!quizQueue.length) {
-      quizQueue = createQuizQueue(data.points, { lastId });
+      quizQueue = createQuizQueue(quizCandidates, { lastId });
       quizRoundTotal = quizQueue.length;
     }
 
@@ -362,7 +363,7 @@
     </section>` : `<button class="primary-button" type="button" data-action="quiz-reveal">${icon('book-open')}查看答案</button>`;
 
     main.innerHTML = `${heading('随机练习', '从全部题库随机抽题，先回答，再核对笔记。', 'QUIZ')}
-      <div class="section-header"><div><h2>全部题库</h2><p>${data.points.length} 个知识点 · 本轮位置 ${roundPosition} / ${quizRoundTotal}</p></div></div>
+      <div class="section-header"><div><h2>全部题库</h2><p>${quizCandidates.length} 个知识点 · 本轮位置 ${roundPosition} / ${quizRoundTotal}</p></div></div>
       <section data-quiz-question tabindex="-1">
         <p class="eyebrow">专题：${escapeHtml(point.topic)} · 来源文档：${escapeHtml(note.title)}</p>
         <h2>${escapeHtml(createQuestionTitle(point.title))}</h2>

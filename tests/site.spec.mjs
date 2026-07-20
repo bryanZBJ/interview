@@ -69,6 +69,43 @@ test('practises a random question before revealing its answer', async ({ page })
   await expect(page.getByRole('button', { name: '查看答案' })).toBeVisible();
 });
 
+test('excludes quiz points whose source document is unavailable', async ({ page }) => {
+  const originalTotal = await page.locator('#site-data').evaluate((element) => JSON.parse(element.textContent).points.length);
+  const fakeTitle = '不存在来源的边界测试题';
+  await page.route('**/', async (route) => {
+    const response = await route.fetch();
+    const html = await response.text();
+    const siteDataPattern = /(<script type="application\/json" id="site-data">)([\s\S]*?)(<\/script>)/;
+    const match = html.match(siteDataPattern);
+    const payload = JSON.parse(match[2]);
+    payload.points.push({
+      id: 'missing-source-quiz-point',
+      title: fakeTitle,
+      excerpt: '这是一道字段完整但来源文档不存在的测试题。',
+      documentSlug: 'missing-source-document',
+      headingId: 'missing-source-heading',
+      topic: '边界测试'
+    });
+    const safePayload = JSON.stringify(payload)
+      .replaceAll('&', '\\u0026')
+      .replaceAll('<', '\\u003c')
+      .replaceAll('>', '\\u003e')
+      .replaceAll('\u2028', '\\u2028')
+      .replaceAll('\u2029', '\\u2029');
+    const body = html.replace(siteDataPattern, (_match, openingTag, _siteData, closingTag) => `${openingTag}${safePayload}${closingTag}`);
+    await route.fulfill({ response, body });
+  });
+  await page.addInitScript(() => {
+    let randomCalls = 0;
+    Math.random = () => randomCalls++ === 0 ? 0 : 0.999999;
+  });
+  await page.reload();
+
+  await page.getByRole('button', { name: '练习' }).first().click();
+  await expect(page.locator('.section-header').filter({ hasText: '全部题库' })).toContainText(`${originalTotal} 个知识点`);
+  await expect(page.locator('[data-quiz-question]')).not.toContainText(fakeTitle);
+});
+
 test('shows the correct primary navigation for the viewport', async ({ page }, testInfo) => {
   const isDesktop = testInfo.project.name.startsWith('desktop');
   if (isDesktop) {
