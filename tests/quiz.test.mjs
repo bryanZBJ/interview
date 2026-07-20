@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import config from '../site.config.mjs';
+import { buildSiteData } from '../src/build.mjs';
+
 await import('../src/quiz.js');
 
 const {
@@ -19,6 +22,27 @@ const point = (title, overrides = {}) => ({
   ...overrides
 });
 
+const GENERIC_STRUCTURAL_TITLES = new Set([
+  '目标',
+  '准备',
+  '逐步操作',
+  '结论',
+  '常见问法',
+  '核心对比',
+  '应用场景',
+  '操作步骤',
+  '实验步骤',
+  '前置准备'
+]);
+
+function normalizeStructuralTitle(title) {
+  return String(title || '')
+    .normalize('NFKC')
+    .trim()
+    .replace(/^(?:(?:第\s*)?(?:\d+(?:\.\d+)*|[一二三四五六七八九十百]+)(?:\s*[章节部分步])?|\((?:\d+(?:\.\d+)*|[一二三四五六七八九十百]+)\))\s*[.、:：)\]】\-—]*\s*/, '')
+    .replace(/[\s:：。.!！?？、;；,，()（）【】\[\]{}《》<>“”"'‘’_\-—]/g, '');
+}
+
 test('quiz filter excludes structural headings and keeps interview concepts', () => {
   assert.equal(isQuizEligible(point('使用说明')), false);
   assert.equal(isQuizEligible(point('今日产出与完成打卡')), false);
@@ -26,6 +50,37 @@ test('quiz filter excludes structural headings and keeps interview concepts', ()
   assert.equal(isQuizEligible(point('什么是 Java 内存模型？')), true);
   assert.equal(isQuizEligible(point('ArrayList 和 LinkedList 的区别')), true);
   assert.equal(isQuizEligible(point('有效题目', { excerpt: '' })), false);
+});
+
+test('quiz filter excludes exact generic structural headings after normalization', () => {
+  const genericTitles = [
+    ...GENERIC_STRUCTURAL_TITLES,
+    '1. 目标',
+    '1.1 核心对比',
+    '一、应用场景',
+    '（二） 结论：',
+    '第 3 章：逐步操作'
+  ];
+
+  for (const title of genericTitles) {
+    assert.equal(isQuizEligible(point(title)), false, `expected generic heading to be excluded: ${title}`);
+  }
+
+  assert.equal(isQuizEligible(point('业务目标拆解')), true);
+  assert.equal(isQuizEligible(point('应用场景中的幂等设计')), true);
+  assert.equal(isQuizEligible(point('核心对比分析：CMS 与 G1')), true);
+});
+
+test('real quiz corpus contains no normalized generic structural headings', () => {
+  const data = buildSiteData(config, process.cwd());
+  const quizIds = new Set(createQuizQueue(data.points, { random: () => 0 }));
+  const genericCorpusPoints = data.points.filter((item) => GENERIC_STRUCTURAL_TITLES.has(normalizeStructuralTitle(item.title)));
+  const pollutedTitles = genericCorpusPoints
+    .filter((item) => quizIds.has(item.id))
+    .map((item) => item.title);
+
+  assert.ok(genericCorpusPoints.length > 0, 'expected the real corpus to exercise generic structural headings');
+  assert.deepEqual(pollutedTitles, []);
 });
 
 test('question title preserves questions and converts concept titles', () => {

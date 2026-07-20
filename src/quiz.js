@@ -1,7 +1,29 @@
 ((root) => {
   'use strict';
 
-  const STRUCTURAL_TITLE = /使用说明|阅读说明|学习目标|必须理解|核心结论|生产建议|面试口述|今日产出|完成打卡|参考|参考资料|延伸阅读|实验原文|跟着做|阅读项目代码|修改实验|记录表|预期观察|快速验收|不看答案自测|自测|总结/;
+  const STRUCTURAL_TITLE_FRAGMENT = /使用说明|阅读说明|学习目标|必须理解|核心结论|生产建议|面试口述|今日产出|完成打卡|参考|参考资料|延伸阅读|实验原文|跟着做|阅读项目代码|修改实验|记录表|预期观察|快速验收|不看答案自测|自测|总结/;
+  const GENERIC_STRUCTURAL_TITLE = new Set([
+    '目标',
+    '准备',
+    '逐步操作',
+    '结论',
+    '常见问法',
+    '核心对比',
+    '应用场景',
+    '操作步骤',
+    '实验步骤',
+    '前置准备'
+  ]);
+  const CHAPTER_NUMBER_PREFIX = /^(?:(?:第\s*)?(?:\d+(?:\.\d+)*|[一二三四五六七八九十百]+)(?:\s*[章节部分步])?|\((?:\d+(?:\.\d+)*|[一二三四五六七八九十百]+)\))\s*[.、:：)\]】\-—]*\s*/;
+  const TITLE_SPACING_AND_PUNCTUATION = /[\s:：。.!！?？、;；,，()（）【】\[\]{}《》<>“”"'‘’_\-—]/g;
+
+  function normalizeGenericStructuralTitle(title) {
+    return String(title || '')
+      .normalize('NFKC')
+      .trim()
+      .replace(CHAPTER_NUMBER_PREFIX, '')
+      .replace(TITLE_SPACING_AND_PUNCTUATION, '');
+  }
 
   function isQuizEligible(point) {
     return Boolean(
@@ -10,7 +32,8 @@
       && String(point.excerpt || '').trim()
       && String(point.documentSlug || '').trim()
       && String(point.headingId || '').trim()
-      && !STRUCTURAL_TITLE.test(point.title)
+      && !STRUCTURAL_TITLE_FRAGMENT.test(point.title)
+      && !GENERIC_STRUCTURAL_TITLE.has(normalizeGenericStructuralTitle(point.title))
     );
   }
 
